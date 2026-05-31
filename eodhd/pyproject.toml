@@ -1,0 +1,9 @@
+[project]
+name = "eodhd-mcp"
+version = "0.1.0"
+description = "MCP server for EODHD sentiment analysis and macroeconomic data"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "requests>=2.31.0",
+]
