@@ -292,6 +292,31 @@ def _shape_trend_entry(date_str: str, period: str, e: dict) -> dict:
     }
 
 
+def _extract_forward_estimates(trend_raw: dict) -> dict:
+    """Reshape a raw Earnings::Trend section → {next_q/curr_fy/next_fy/curr_q}.
+
+    The section is keyed by fiscal date and contains many historical 0q/0y rows;
+    for each forward period code keep only the entry with the latest date.
+    """
+    if not isinstance(trend_raw, dict):
+        return {}
+    latest_by_period: dict[str, tuple[str, dict]] = {}
+    for date_key, entry in trend_raw.items():
+        if not isinstance(entry, dict):
+            continue
+        period = entry.get("period")
+        if period not in _FORWARD_PERIOD_LABELS:
+            continue
+        cur = latest_by_period.get(period)
+        if cur is None or date_key > cur[0]:
+            latest_by_period[period] = (date_key, entry)
+
+    forward = {}
+    for period, (date_key, entry) in latest_by_period.items():
+        forward[_FORWARD_PERIOD_LABELS[period]] = _shape_trend_entry(date_key, period, entry)
+    return forward
+
+
 def get_earnings_trend(ticker: str) -> dict:
     """Get analyst forward consensus estimates (the closest proxy to guidance).
 
@@ -312,25 +337,7 @@ def get_earnings_trend(ticker: str) -> dict:
     data = _get(f"fundamentals/{ticker}", params={"filter": "Earnings::Trend"})
     if not isinstance(data, dict):
         return {"ticker": ticker, "error": "unexpected response", "forward_estimates": {}}
-
-    # The section is keyed by fiscal date and contains many historical 0q/0y
-    # rows; for each forward period code keep only the entry with the latest date.
-    latest_by_period: dict[str, tuple[str, dict]] = {}
-    for date_key, entry in data.items():
-        if not isinstance(entry, dict):
-            continue
-        period = entry.get("period")
-        if period not in _FORWARD_PERIOD_LABELS:
-            continue
-        cur = latest_by_period.get(period)
-        if cur is None or date_key > cur[0]:
-            latest_by_period[period] = (date_key, entry)
-
-    forward = {}
-    for period, (date_key, entry) in latest_by_period.items():
-        forward[_FORWARD_PERIOD_LABELS[period]] = _shape_trend_entry(date_key, period, entry)
-
-    return {"ticker": ticker, "forward_estimates": forward}
+    return {"ticker": ticker, "forward_estimates": _extract_forward_estimates(data)}
 
 
 def get_economic_calendar(
@@ -403,12 +410,15 @@ def get_fundamentals_snapshot(ticker: str) -> dict:
 
     Returns:
         Dict with name/sector/industry, highlights, valuation, analyst_ratings,
-        and selected technicals (52w range, beta, moving averages).
+        selected technicals (52w range, beta, moving averages), and
+        forward_estimates (analyst consensus EPS/revenue + EPS revision momentum,
+        kept symmetric with the fetch_fundamentals.py cache for the A3 anchor).
     """
     data = _get(f"fundamentals/{ticker}", params={
         "filter": ",".join([
             "General::Name", "General::Sector", "General::Industry",
             "Highlights", "Valuation", "AnalystRatings", "Technicals", "SharesStats",
+            "Earnings::Trend",
         ]),
     })
     if not isinstance(data, dict):
@@ -417,6 +427,8 @@ def get_fundamentals_snapshot(ticker: str) -> dict:
     hl = data.get("Highlights") or {}
     tech = data.get("Technicals") or {}
     shares = data.get("SharesStats") or {}
+    # Earnings::Trend may come back flat-keyed or nested under Earnings.
+    trend_raw = data.get("Earnings::Trend") or (data.get("Earnings") or {}).get("Trend", {}) or {}
 
     return {
         "ticker": ticker,
@@ -447,6 +459,7 @@ def get_fundamentals_snapshot(ticker: str) -> dict:
             "sma_200d": tech.get("200DayMA"),
             "short_percent_float": tech.get("ShortPercent"),
         },
+        "forward_estimates": _extract_forward_estimates(trend_raw),
         "shares_outstanding": shares.get("SharesOutstanding"),
     }
 
