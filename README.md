@@ -1,13 +1,14 @@
 # fadacai-mcp-servers
 
-兩個輕量、自寫的 [MCP](https://modelcontextprotocol.io) server，供投資研究使用。可獨立運行，也是 [fadacai-portfolio](https://github.com/PatrickSUDO/fadacai-portfolio) 框架的數據來源之一。
+兩個輕量、自寫的 [MCP](https://modelcontextprotocol.io) server，供投資研究使用。可獨立運行，也是 [fadacai-portfolio](https://github.com/PatrickSUDO/fadacai-portfolio) 框架的數據來源之一。另含一個第三方 server 的**薄整合**（fmp，僅安裝設定，非自有原始碼）。
 
-| Server | 功能 | 需要 API key？ | 資料來源 |
-|--------|------|:--------------:|----------|
-| **`technical`** | 技術指標：RSI、MACD、布林通道、ATR、動量分數、支撐/壓力、52 週區間、板塊輪動 | ❌ | yfinance（免費爬蟲） |
-| **`eodhd`** | 新聞情緒分析：個股 AI 情緒分數（-1 → +1）、每日情緒軌跡 | ✅ `EODHD_API_TOKEN` | [EODHD API](https://eodhd.com) |
+| Server | 功能 | 需要 API key？ | 資料來源 | 性質 |
+|--------|------|:--------------:|----------|------|
+| **`technical`** | 技術指標：RSI、MACD、布林通道、ATR、動量分數、支撐/壓力、52 週區間、板塊輪動 | ❌ | yfinance（免費爬蟲） | 自寫 |
+| **`eodhd`** | 新聞情緒分析：個股 AI 情緒分數（-1 → +1）、每日情緒軌跡 | ✅ `EODHD_API_TOKEN` | [EODHD API](https://eodhd.com) | 自寫 |
+| **`fmp`** | 行情/基本面/peers/市場異動等（HTTP transport，:8081） | ✅ `FMP_ACCESS_TOKEN` | [FMP API](https://financialmodelingprep.com) | **第三方薄整合** → [`fmp/README.md`](fmp/README.md) |
 
-兩者皆為 stdio transport、基於 `FastMCP`，**不含任何金鑰**——所有 token 從環境變數讀取。
+`technical` / `eodhd` 為 stdio transport、基於 `FastMCP`、自寫且**不含任何金鑰**。`fmp` 是第三方 [imbenrabi/Financial-Modeling-Prep-MCP-Server](https://github.com/imbenrabi/Financial-Modeling-Prep-MCP-Server) 的本機安裝設定——此 repo **不 vendor 其原始碼**，僅存 README + `.env.example` + sanitized launchd 範本，詳見 [`fmp/`](fmp/)。
 
 ---
 

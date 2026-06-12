@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 範本：複製到 ~/Library/LaunchAgents/ 後，把所有 __PLACEHOLDER__ / YOUR_USERNAME / 路徑換成實際值。
+     切勿把填好真實 FMP_ACCESS_TOKEN 的版本 commit 回 repo。 -->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.fadacai.fmp-mcp</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/node</string>
+        <string>/Users/YOUR_USERNAME/laptop/mcp-servers/fmp-mcp/dist/index.js</string>
+        <string>--port</string>
+        <string>8081</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>FMP_ACCESS_TOKEN</key>
+        <string>__FMP_ACCESS_TOKEN__</string>
+        <key>PORT</key>
+        <string>8081</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USERNAME/laptop/mcp-servers/fmp-mcp/fmp-mcp.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USERNAME/laptop/mcp-servers/fmp-mcp/fmp-mcp.err</string>
+</dict>
+</plist>
