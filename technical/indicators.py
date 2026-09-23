@@ -12,6 +12,11 @@ def fetch_data(ticker: str, period: str = "6mo") -> pd.DataFrame:
     df = stock.history(period=period)
     if df.empty:
         raise ValueError(f"No data found for {ticker}")
+    # Yahoo 偶爾在最新交易日回一列只有 Volume、OHLC 全 NaN 的空 K 線（2026-09-22 全市場皆如此）。
+    # 不丟掉的話 price / Bollinger / ATR% / vs_sma 全變 NaN，support_resistance 直接 crash。
+    df = df.dropna(subset=["Close"])
+    if df.empty:
+        raise ValueError(f"No valid close prices for {ticker}")
     return df
 
 
