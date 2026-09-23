@@ -183,7 +183,8 @@ def get_technical_indicators(ticker: str, period: str = "6mo") -> dict:
     bbands = calc_bbands(df)
     atr = calc_atr(df)
     volume = calc_volume(df)
-    ma = calc_moving_averages(df)
+    # SMA200 需要 ≥200 根日 K；預設 6mo 只有約 125 根 → 均線另抓 1y（H12 趨勢濾網要 SMA50 + 200 日線）
+    ma = calc_moving_averages(df if len(df) >= 200 else fetch_data(ticker, "1y"))
     momentum = calc_momentum_score(rsi, macd, ma, volume)
     trend = determine_trend(ma, rsi, macd)
 
